@@ -1,0 +1,21 @@
+--------------------------
+BANCO:
+X
+A
+--------------------------
+PROGRAMA
+VOUUSAR X
+VOUUSAR A
+VOUUSAR Var1
+VOUUSAR Var2
+atribua 5 em a
+atribua 9 em x
+atribua 10 em var1
+atribua 11 em var2
+escreva x
+escreva a
+escreva 21
+FIM PROGRAMA
+-----------------------
+pilha(add, remove, consultar)
+-- As palavras reservadas não podem estar na pilha.
