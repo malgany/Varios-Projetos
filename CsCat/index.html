@@ -1,0 +1,117 @@
+<html>
+    <head>
+    <title>Estudos IA</title>
+    <script language="javascript" src="jquery-1.11.3.min.js"></script>
+    <script language="javascript" src="mapa.js"></script>
+    <script language="javascript" src="teclado.js"></script>
+    <script language="javascript" src="player.js"></script>
+    <script language="javascript" src="colisao.js"></script>
+    </head>
+    <body>
+        <div id="mapa">
+            <div id="submapa"></div>
+            <div id="player"></div>
+        </div>
+        <!---->
+        <fieldset id="logs">
+            <legend>Teste<legend>
+
+        </fieldset>
+        <!---->
+
+        <script>
+        $( window ).load(function(){
+            setInterval(function(){
+
+                var string = "";
+                string+= direita+' - '+esquerda+' - '+cima+' - '+baixo+"<br>";
+                string+= direcao_player+'/'+direcao_anterior_player+"</li><br>";
+                string+= "mapa L:"+getLeft()+", T"+getTop()+"<br>";
+                string+= "player L:"+getLeftPlayer()+", T"+getTopPlayer()+"<br>";
+                string+= "Colisao Left:"+colisionleft+"<br>";
+                string+= "Colisao Lop:"+colisiontop+"<br>";
+
+                $("#logs").html( string );
+            },300);
+        });
+
+
+
+            // Controlador do teclado
+            var teclado = new Teclado(document);
+            // Um loop de animação básico
+            requestAnimationFrame(animar);
+
+            // Velocidade
+            var velocidade = 5;
+
+             function animar() {
+                 // valida se o personagem está se movimentando
+                 movimento();
+
+                requestAnimationFrame(animar);
+            }
+        </script>
+        <style>
+            body {
+                overflow-x: hidden;
+                overflow-y: hidden;
+            }
+
+            #mapa {
+                height: 300px;
+                width: 300px;
+                border: 1px solid;
+                background: rgba(127, 118, 251, 0.85);
+                position: absolute;
+                z-index: 0;
+            }
+
+            #submapa {
+                height: 600px;
+                width: 600px;
+                border: 1px solid;
+                position: relative;
+                top: 0px;
+                left: 0px;
+                z-index: -1;
+            }
+
+            #player {
+                height: 50px;
+                width: 50px;
+                background: black;
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                z-index: 1;
+            }
+
+            #logs {
+                position: absolute;
+                left: 358px;
+                background: white;
+                height: 233px;
+                width: 150px;
+            }
+            .quadrado {
+                height: 49px;
+                width: 49px;
+                z-index: -1;
+                float: left;
+                border-left: 1px solid;
+                border-bottom: 1px solid;
+                background: rgba(6, 0, 255, 0.14);
+            }
+            .parede {
+                height: 49px;
+                width: 49px;
+                z-index: -1;
+                float: left;
+                border-left: 1px solid;
+                border-bottom: 1px solid;
+                background: rgba(39, 255, 34, 0.89);
+            }
+        </style>
+    </body>
+</html>

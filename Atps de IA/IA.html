@@ -1,0 +1,863 @@
+<html>
+<head>
+<title>Estudos IA</title>
+<script language="javascript" src="jquery-1.10.2.js"></script>
+<script type="text/javascript">
+
+var obstaculos = new Array();
+var base_lin;
+var base_col;
+var direcao;
+var passada;
+var passo_lin;
+var passo_col;
+var espiral;
+var control;
+var tempo;
+
+var count_ouro;
+var control_ouro;
+//var array_consome;
+//var array_temp;
+
+var nodes_visinhos;
+var nodes_abertos;
+var nodes_fechados;
+
+function limpaVariaveis(){
+    nodes_visinhos	= new Array();
+    nodes_abertos	= new Array();
+    nodes_fechados	= new Array();
+    count_ouro = 6;
+    control_ouro = true;
+    //array_temp		= new Array();
+}
+
+function init(){
+	direcao = "";
+	passada = 0;
+	passo_lin = 0;
+	passo_col = 0;
+	espiral = 1;
+	control = -1;
+	tempo = 90;
+
+        
+	limpaVariaveis();
+}
+
+function criarMapa(){
+
+    init();
+
+    document.getElementById("container").innerHTML = "";
+	document.getElementById("container").background="rgb(150,199,108)";
+    // vamos criar o elemento HTML table
+    var tabela = document.createElement("table");
+    tabela.border = "0px";
+    tabela.cellSpacing = "0px";
+    tabela.cellPadding = "1px";
+	
+
+    // vamos criar o corpo da tabela, ou seja, o tbody
+    var corpo = document.createElement("tbody");
+    tabela.appendChild(corpo);
+
+    // vamos criar trÃªs linhas contendo quatro cÃ©lulas cada uma
+    for(var i = 0; i < document.getElementById('linhas').value; i++){
+      var linha = corpo.insertRow(-1);
+
+      for(var j = 0; j < document.getElementById('colunas').value; j++){
+         var celula = linha.insertCell(-1);
+         //celula.innerHTML = "[" + i + ", " + j + "]";
+		 celula.id=i+'|'+j;
+		 celula.style.background="rgb(150,199,108)";//url('grama_verde.jpg')
+		 celula.style.width = "45px";
+		 celula.style.height = "45px";
+
+		 obstaculos[i+'|'+j] = "g";
+      }
+    }
+
+    // vamos anexar a tabela recÃ©m-criada a um elemento div
+    var container = document.getElementById("container");
+    container.appendChild(tabela);
+
+	//obstaculo_teste();
+	obstaculo();
+	minas();
+	base();
+}
+
+function obstaculo(){
+
+	for(var a =0; a<(((document.getElementById('linhas').value*document.getElementById('colunas').value)*5)/100);a++){
+		var lin = document.getElementById('linhas');
+		var col = document.getElementById('colunas');
+
+		var rand_lin = Math.floor((Math.random()*lin.value));
+		var rand_col = Math.floor((Math.random()*col.value));
+
+
+        if(
+            obstaculos[(rand_lin-1) +'|'+(rand_col-1)]  == "o" && 
+            obstaculos[(rand_lin-2) +'|'+(rand_col)]    == "o" && 
+            obstaculos[(rand_lin-1) +'|'+(rand_col+1)]  == "o" ){
+
+        }else if(
+            obstaculos[(rand_lin-1) +'|'+(rand_col+1)]  == "o" && 
+            obstaculos[(rand_lin)   +'|'+(rand_col+2)]  == "o" && 
+            obstaculos[(rand_lin+1) +'|'+(rand_col+1)]  == "o" ){
+
+        }else if(
+            obstaculos[(rand_lin+1) +'|'+(rand_col+1)]  == "o" && 
+            obstaculos[(rand_lin+2) +'|'+(rand_col)]    == "o" && 
+            obstaculos[(rand_lin+1) +'|'+(rand_col-1)]  == "o" ){
+
+        }else if(
+            obstaculos[(rand_lin+1) +'|'+(rand_col-1)]  == "o" && 
+            obstaculos[(rand_lin)   +'|'+(rand_col-2)]  == "o" && 
+            obstaculos[(rand_lin-1) +'|'+(rand_col-1)]  == "o" ){
+
+        }else if(rand_lin == base_lin && rand_col == base_col-1){
+
+        }else{
+
+    		document.getElementById(rand_lin +'|'+rand_col).style.background = "url('cacto.png')";
+    		document.getElementById(rand_lin +'|'+rand_col).style.backgroundSize="47px 45px";
+
+    		obstaculos[rand_lin +'|'+rand_col] = "o";
+        }
+
+	}
+}
+
+
+function obstaculo_teste(){
+		var a =4;
+		var b =6;
+        document.getElementById(a + '|' + b).style.background = "url('cacto.png')";
+        document.getElementById(a + '|' + b).style.backgroundSize = "50px 45px";
+        obstaculos[a + '|' + b] = "o";
+        
+		var a =4;
+		var b =3;
+        document.getElementById(a + '|' + b).style.background = "url('cacto.png')";
+        document.getElementById(a + '|' + b).style.backgroundSize = "50px 45px";
+        obstaculos[a + '|' + b] = "o";
+		
+		var a =2;
+		var b =4;
+        document.getElementById(a + '|' + b).style.background = "url('cacto.png')";
+        document.getElementById(a + '|' + b).style.backgroundSize = "50px 45px";
+        obstaculos[a + '|' + b] = "o";
+		
+		/***************************************************/
+
+		var a =3;
+		var b =6;
+		document.getElementById(a +'|'+b).style.background = "url('ouro.jpg')";
+		document.getElementById(a +'|'+b).style.backgroundSize="50px 44px";
+
+		obstaculos[a +'|'+b] = "m";
+}
+
+function minas(){
+	for(var a =0; a<(((document.getElementById('linhas').value*document.getElementById('colunas').value)*6)/100);a++){
+		var lin = document.getElementById('linhas');
+		var col = document.getElementById('colunas');
+                
+                do{
+                    do{
+                        var rand_lin = Math.floor((Math.random()*lin.value));
+                        var rand_col = Math.floor((Math.random()*col.value));
+
+                    }while(obstaculos[rand_lin +'|'+rand_col] != "g");
+                    
+                }while( obstaculos[rand_lin +'|'+(rand_col-1)] == "o" ||
+                        obstaculos[(rand_lin-1) +'|'+ rand_col] == "o" ||
+                        obstaculos[rand_lin +'|'+ (rand_col+1)] == "o" ||
+                        obstaculos[(rand_lin+1) +'|'+ rand_col] == "o"
+                        );
+
+		document.getElementById(rand_lin +'|'+rand_col).style.background = "url('ouro.jpg')";
+		document.getElementById(rand_lin +'|'+rand_col).style.backgroundSize="50px 44px";
+
+		obstaculos[rand_lin +'|'+rand_col] = "m";
+	}
+}
+
+function base(){
+	var lin = document.getElementById('linhas');
+	var col = document.getElementById('colunas');
+
+	if(lin.value%2){
+		base_lin = ((lin.value-1)/2);
+		base_col = ((col.value-1)/2);
+
+		document.getElementById(base_lin +'|'+ base_col).style.background = "url('base.jpg')";
+		document.getElementById(base_lin +'|'+ base_col).style.backgroundSize="50px 44px";
+	}else{
+		base_lin = ((lin.value)/2);
+		base_col = ((col.value)/2);
+
+		document.getElementById(base_lin +'|'+ base_col).style.background = "url('base.jpg')";
+		document.getElementById(base_lin +'|'+ base_col).style.backgroundSize="50px 44px";
+	}
+}
+
+function play(){
+	document.getElementById(base_lin +'|'+base_col).style.background = "url('smile.jpg')";
+	document.getElementById(base_lin +'|'+base_col).style.backgroundSize="50px 44px";
+
+	setTimeout(function(){
+		passo_lin = base_lin;
+		passo_col = base_col;
+		document.getElementById(base_lin +'|'+base_col).style.background = "url('base.jpg')";
+		document.getElementById(base_lin +'|'+base_col).style.backgroundSize="50px 44px";
+		andar();
+	}, tempo);
+}
+
+function addOpenList(str, pai, l, c){
+        for(var i = 0, j = nodes_abertos.length; i < j; i++) {
+            var node = nodes_abertos[i].split("POS");
+			
+            if(node[1].slice(0,2) == str) {
+                return false;
+            }
+        }
+        var spli = str.split("|");;
+		
+        var dif1 = spli[0]-l;
+        var dif2 = spli[1]-c;
+        
+        var peso = ((dif1 < 0) ? dif1*-1 : dif1) + ((dif2 < 0) ? dif2*-1 : dif2);
+
+        nodes_abertos.push("PAI"+pai+"POS"+str+"PESO"+peso);
+        
+        return true;
+}
+
+function removeOpenList(pos){
+        
+        var node = nodes_abertos[pos];
+        nodes_abertos.remove(pos, 1);
+		
+        var str = node.split("POS")
+        
+        return str[1].slice(0,2);
+}
+
+function getBetterNode(abertos){
+        var maior = 1000;
+        var pos_maior;
+        
+        for(var i = 0, j = abertos.length; i < j; i++) {
+            
+            var pes = abertos[i].split("PESO");
+            
+            if(pes[1] < maior) {
+                maior = pes[1];
+                pos_maior = i;
+            }
+        }
+        var pos = abertos[pos_maior].split("POS");
+		
+		var posicao = abertos[pos_maior].split("PESO");
+		var posicao = posicao[0].split("POS");
+		var posicao = posicao[1].split("|");
+		
+        return [pos_maior, posicao[0], posicao[1], pos[0].slice(3)]
+}
+
+function addCloseList(str, pai, id){
+        nodes_fechados.push("PAI"+pai+"ID"+id+"POS"+str);
+}
+
+function isCloseList(str){
+        for(var i = 0, j = nodes_fechados.length; i < j; i++) {
+            var pos = nodes_fechados[i].split("POS");
+			
+            if(pos[1].slice(0) == str) {
+                return true ; 
+            }
+        }
+        return false;
+}
+
+function retornaVisinhos(passo_lin, passo_col){
+    return [
+            (passo_lin-1)+"|"+passo_col,
+            (passo_lin+1)+"|"+passo_col,
+            passo_lin+"|"+(passo_col-1),
+            passo_lin+"|"+(passo_col+1)
+           ];
+}
+
+function retornaMenorCaminho(fechados){
+        var fim1 = fechados.pop();
+        var fim = fim1.split("PAI");     //PAI 0 ID 1 POS 66
+		
+		var fim1 = fim1.split("POS");
+		
+        var fim = fim[1].split("ID");   //    0 ID 1 POS 66
+        var pai = fim[0];               //    0
+        var local = new Array();
+        while(pai != 0){
+            for(var i = 0, j = fechados.length; i < j; i++) {
+                var aux   = fechados[i].split("PAI"); //PAI 0 ID 1 POS 66
+                var aux   = aux[1].split("ID");       //    0 ID 1 POS 66
+                var aux   = aux[1].split("POS");      //         1 POS 66
+                var auxid = aux[0];                   //         1
+
+                if(auxid == pai){
+                    var fim = fechados[i].split("PAI");     //PAI 0 ID 1 POS 66
+                    var fim = fim[1].split("ID");   //    0 ID 1 POS 66
+                    var pai2 = fim[0];              //    0
+                    pai = pai2;
+                    //alert(fechados[i]);
+					var fim2 = fim[1].split("POS")
+                    local.push(fim2[1]);
+                }
+            }
+        }
+        local.pop();
+        var local = local.reverse();
+        local.push(fim1[1]);
+        
+        return local;
+}
+
+function diff(li, co, l, c, dir){
+    var dif1 = li-l;
+    var dif2 = co-c;
+
+    var peso = ((dif1 < 0) ? dif1*-1 : dif1) + ((dif2 < 0) ? dif2*-1 : dif2);
+
+    for( var i = 0; i < peso; i++ ){
+        falsoAnda(dir);
+    }       
+}
+
+function desvioAStar(lin, col, l, c, dir){
+
+    if(dir != "n") diff(lin, col, l, c, dir);
+    
+    var pai;
+    var id  = 1;
+    var atual = lin+"|"+col;
+
+    addCloseList(atual, 0, id);// 0, 1
+    
+    while(parseInt(lin) != l || parseInt(col) != c){
+        //Armazena em uma lista os vizinhos do nodo atual. O mï¿½todo retornaVisinhos retorna os vizinhos do ponto
+        nodes_visinhos = retornaVisinhos(parseInt(lin), parseInt(col));
+
+        //Para todos os vizinhos encontrados
+        for(var i = 0;i < nodes_visinhos.length; i++){
+
+            if(podeAndar('', '', nodes_visinhos[i])){
+                
+                //Verifica se o vizinho nï¿½o estï¿½o na lista de fechados, ou seja, se jï¿½ nï¿½o foi visitado antes.
+                if(!isCloseList(nodes_visinhos[i])){
+
+                        //Verifica se foi possivel adicionar o vizinho na lista de abertos
+                        addOpenList(nodes_visinhos[i], id, l, c);//id nessa posiï¿½ï¿½o ï¿½ pai
+                            
+                }
+            }
+        }
+        id++;
+        
+        //Seta que o nodo atual, ï¿½ o vizinho de melhor custo (dï¿½ um passo)
+        var result = getBetterNode(nodes_abertos);
+        var pos = result[0];
+        lin 	= result[1];
+        col 	= result[2];
+        var pai = result[3];//retornado o pai
+        //alert(lin+" - "+col);
+        
+        atual = lin+"|"+col;
+        //Remove o melhor vizinho da lista de abertos
+        removeOpenList(pos);
+        //Adiciona o melhor vizinho na lista de fechados
+        addCloseList(atual, pai, id);	
+    }
+    
+    return retornaMenorCaminho(nodes_fechados);
+}
+
+function aplicaDesvio(array_values){
+    
+    if(array_values.length == 0){
+        limpaVariaveis();
+        setTimeout(function () { andar();}, tempo);
+    }else
+        setTimeout(function () { 
+            var aux = array_values.shift();
+            var aux =aux.split("|");
+            movimenta2(aux[0], aux[1]);
+            aplicaDesvio(array_values);
+        }, tempo);
+}
+
+function andar(){
+
+    passo_lin = parseInt(passo_lin);
+    passo_col = parseInt(passo_col);
+
+    if (direcao == "" || direcao == "b") {
+        if (podeAndar(passo_lin, passo_col - 1)) {
+            control = (control == -1) ? espiral : control;
+
+            movimenta(0, -1);
+
+            control--;
+            if (control == 0) {
+
+                passada++;
+                if (passada == 2) {
+                    passada = 0;
+                    espiral++;
+                }
+                control = -1;
+                direcao = "e";
+            }
+            setTimeout(function () { andar(); }, tempo);
+        } else if (temMina(passo_lin, passo_col - 1)) {
+            consomeMina(passo_lin, passo_col - 1, '');
+        } else if (temObstaculo(passo_lin, passo_col - 1)) {
+
+            var l;
+            var c;
+
+            if (control > 0 || control == -1) {
+                control = (control == -1) ? espiral : control;
+
+                if (control == 1 && podeAndar(passo_lin - 1, passo_col - 1)) {
+                    l = passo_lin - 1;
+                    c = passo_col - 1;
+                } else if (control == 1 && podeAndar(passo_lin - 2, passo_col - 1)) {
+                    l = passo_lin - 2;
+                    c = passo_col - 1;
+                } else if (control == 1 && podeAndar(passo_lin - 3, passo_col - 1)) {
+                    l = passo_lin - 3;
+                    c = passo_col - 1;
+                }
+
+                else if (control == 2 && podeAndar(passo_lin, passo_col - 2)) {
+                    l = passo_lin;
+                    c = passo_col - 2;
+                } else if (control == 2 && podeAndar(passo_lin - 1, passo_col - 2)) {
+                    l = passo_lin - 1;
+                    c = passo_col - 2;
+                } else if (control == 2 && podeAndar(passo_lin - 2, passo_col - 2)) {
+                    l = passo_lin - 2;
+                    c = passo_col - 2;
+                }
+
+                else if (control == 3 && podeAndar(passo_lin, passo_col - 2)) {
+                    l = passo_lin;
+                    c = passo_col - 2;
+                } else if (control == 3 && podeAndar(passo_lin, passo_col - 3)) {
+                    l = passo_lin;
+                    c = passo_col - 3;
+                } else if (control == 3 && podeAndar(passo_lin - 1, passo_col - 3)) {
+                    l = passo_lin - 1;
+                    c = passo_col - 3;
+                } else {
+                    var y = 1;
+                    while (y < control) {
+                        if (podeAndar(passo_lin, passo_col - y)) {
+                            l = passo_lin;
+                            c = passo_col - y;
+                            break;
+                        }
+                        y++;
+                    }
+                }
+                aplicaDesvio(desvioAStar(passo_lin, passo_col, l, c, "e"));
+            }
+        }
+
+    } else if (direcao == "e") {
+        if (podeAndar(passo_lin - 1, passo_col)) {
+            control = (control == -1) ? espiral : control;
+
+            movimenta(-1, 0);
+
+            control--;
+            if (control == 0) {
+
+                passada++;
+                if (passada == 2) {
+                    passada = 0;
+                    espiral++;
+                }
+                control = -1;
+                direcao = "c";
+            }
+            setTimeout(function () { andar(); }, tempo);
+        } else if (temMina(passo_lin - 1, passo_col)) {
+			consomeMina(passo_lin - 1, passo_col, '');
+        } else if (temObstaculo(passo_lin - 1, passo_col)) {
+
+            var l;
+            var c;
+
+            if (control > 0 || control == -1) {
+                control = (control == -1) ? espiral : control;
+
+                if (control == 1 && podeAndar(passo_lin - 1, passo_col + 1)) {
+                    l = passo_lin - 1;
+                    c = passo_col + 1;
+                } else if (control == 1 && podeAndar(passo_lin - 1, passo_col + 2)) {
+                    l = passo_lin - 1;
+                    c = passo_col + 2;
+                } else if (control == 1 && podeAndar(passo_lin - 1, passo_col + 3)) {
+                    l = passo_lin - 1;
+                    c = passo_col + 3;
+                }
+
+                else if (control == 2 && podeAndar(passo_lin - 2, passo_col)) {
+                    l = passo_lin - 2;
+                    c = passo_col;
+                } else if (control == 2 && podeAndar(passo_lin - 2, passo_col + 1)) {
+                    l = passo_lin - 2;
+                    c = passo_col + 1;
+                } else if (control == 2 && podeAndar(passo_lin - 2, passo_col + 2)) {
+                    l = passo_lin - 2;
+                    c = passo_col + 2;
+                }
+
+                else if (control == 3 && podeAndar(passo_lin - 2, passo_col)) {
+                    l = passo_lin - 2;
+                    c = passo_col;
+                } else if (control == 3 && podeAndar(passo_lin - 3, passo_col)) {
+                    l = passo_lin - 3;
+                    c = passo_col;
+                } else if (control == 3 && podeAndar(passo_lin - 3, passo_col + 1)) {
+                    l = passo_lin - 3;
+                    c = passo_col + 1;
+                } else {
+                    var y = 1;
+                    while (y < control) {
+                        if (podeAndar(passo_lin - y, passo_col)) {
+                            l = passo_lin - y;
+                            c = passo_col;
+                            break;
+                        }
+                        y++;
+                    }
+                }
+
+                aplicaDesvio(desvioAStar(passo_lin, passo_col, l, c, "c"));
+            }
+		}
+    } else if (direcao == "c") {
+        if (podeAndar(passo_lin, passo_col + 1)) {
+            control = (control == -1) ? espiral : control;
+
+            movimenta(0, +1);
+
+            control--;
+            if (control == 0) {
+
+                passada++;
+                if (passada == 2) {
+                    passada = 0;
+                    espiral++;
+                }
+                control = -1;
+                direcao = "d";
+            }
+            setTimeout(function () { andar(); }, tempo);
+        } else if (temMina(passo_lin, passo_col + 1)) {
+			consomeMina(passo_lin, passo_col + 1, '');
+        } else if (temObstaculo(passo_lin, passo_col + 1)) {
+
+            var l;
+            var c;
+
+            if (control > 0 || control == -1) {
+                control = (control == -1) ? espiral : control;
+
+                if (control == 1 && podeAndar(passo_lin + 1, passo_col + 1)) {
+                    l = passo_lin + 1;
+                    c = passo_col + 1;
+                } else if (control == 1 && podeAndar(passo_lin + 2, passo_col + 1)) {
+                    l = passo_lin + 2;
+                    c = passo_col + 1;
+                } else if (control == 1 && podeAndar(passo_lin + 3, passo_col + 1)) {
+                    l = passo_lin + 3;
+                    c = passo_col + 1;
+                }
+
+                else if (control == 2 && podeAndar(passo_lin, passo_col + 2)) {
+                    l = passo_lin;
+                    c = passo_col + 2;
+                } else if (control == 2 && podeAndar(passo_lin + 1, passo_col + 2)) {
+                    l = passo_lin + 1;
+                    c = passo_col + 2;
+                } else if (control == 2 && podeAndar(passo_lin + 2, passo_col + 2)) {
+                    l = passo_lin + 2;
+                    c = passo_col + 2;
+                }
+
+                else if (control == 3 && podeAndar(passo_lin, passo_col + 2)) {
+                    l = passo_lin;
+                    c = passo_col + 2;
+                } else if (control == 3 && podeAndar(passo_lin, passo_col + 3)) {
+                    l = passo_lin;
+                    c = passo_col + 3;
+                } else if (control == 3 && podeAndar(passo_lin + 1, passo_col + 3)) {
+                    l = passo_lin + 1;
+                    c = passo_col + 3;
+                } else {
+                    var y = 1;
+                    while (y < control) {
+                        if (podeAndar(passo_lin, passo_col + y)) {
+                            l = passo_lin;
+                            c = passo_col + y;
+                            break;
+                        }
+                        y++;
+                    }
+                }
+
+                aplicaDesvio(desvioAStar(passo_lin, passo_col, l, c, "d"));
+            }
+		}
+    } else if (direcao == "d") {
+        if (podeAndar(passo_lin + 1, passo_col)) {
+            control = (control == -1) ? espiral : control;
+
+            movimenta(+1, 0);
+
+            control--;
+            if (control == 0) {
+
+                passada++;
+                if (passada == 2) {
+                    passada = 0;
+                    espiral++;
+                }
+                control = -1;
+                direcao = "b";
+            }
+            setTimeout(function () { andar(); }, tempo);
+        } else if (temMina(passo_lin + 1, passo_col)) {
+			consomeMina(passo_lin + 1, passo_col, '');
+        } else if (temObstaculo(passo_lin + 1, passo_col)) {
+
+            var l;
+            var c;
+
+            if (control > 0 || control == -1) {
+                control = (control == -1) ? espiral : control;
+
+                if (control == 1 && podeAndar(passo_lin + 1, passo_col - 1)) {
+                    l = passo_lin + 1;
+                    c = passo_col - 1;
+                } else if (control == 1 && podeAndar(passo_lin + 1, passo_col - 2)) {
+                    l = passo_lin + 1;
+                    c = passo_col - 2;
+                } else if (control == 1 && podeAndar(passo_lin + 1, passo_col - 3)) {
+                    l = passo_lin + 1;
+                    c = passo_col - 3;
+                }
+
+                else if (control == 2 && podeAndar(passo_lin + 2, passo_col)) {
+                    l = passo_lin + 2;
+                    c = passo_col;
+                } else if (control == 2 && podeAndar(passo_lin + 2, passo_col - 1)) {
+                    l = passo_lin + 2;
+                    c = passo_col - 1;
+                } else if (control == 2 && podeAndar(passo_lin + 2, passo_col - 2)) {
+                    l = passo_lin + 2;
+                    c = passo_col - 2;
+                }
+
+                else if (control == 3 && podeAndar(passo_lin + 2, passo_col)) {
+                    l = passo_lin + 2;
+                    c = passo_col;
+                } else if (control == 3 && podeAndar(passo_lin + 3, passo_col)) {
+                    l = passo_lin + 3;
+                    c = passo_col;
+                } else if (control == 3 && podeAndar(passo_lin + 1, passo_col - 1)) {
+                    l = passo_lin + 3;
+                    c = passo_col - 1;
+                } else {
+                    var y = 1;
+                    while (y < control) {
+                        if (podeAndar(passo_lin + y, passo_col)) {
+                            l = passo_lin + y;
+                            c = passo_col;
+                            break;
+                        }
+                        y++;
+                    }
+                }
+
+                aplicaDesvio(desvioAStar(passo_lin, passo_col, l, c, "b"));
+            }
+        }
+    }
+}
+//não pode ser chamado metodo dentro de metodo quando usar recursão
+//pois o mesmo sobrecarrega o navegador.
+function consomeMina(lin, col, array_consome){
+    
+    if(count_ouro == 0 && control_ouro){
+        limpaVariaveis();
+        setTimeout(function () { andar(); }, tempo);
+        return true;
+    }
+    
+    if(control_ouro){
+        count_ouro--;
+        changePic(lin, col);
+    }
+    control_ouro = !control_ouro;
+    
+    if(array_consome == ''){
+        array_consome = desvioAStar(passo_lin, passo_col, base_lin, base_col, "n");
+        array_consome.unshift(passo_lin+"|"+passo_col);
+    }else{
+        array_consome = array_consome.reverse();
+    }
+    
+    //array_temp = array_consome;
+    sessionStorage.setItem("array_temp", array_consome);
+    
+    aplicaConsomeMina(array_consome);
+    
+    function aplicaConsomeMina(array_values){
+
+        if(array_values.length == 0){
+            var temp = sessionStorage.getItem("array_temp").split(",");
+            consomeMina(lin, col, temp);
+        }else
+            setTimeout(function () { 
+                var aux = array_values.shift();
+                var aux =aux.split("|");
+                movimenta2(aux[0], aux[1]);
+                aplicaConsomeMina(array_values);
+            }, tempo);
+    }
+}
+
+function changePic(lin, col){
+    
+    if(count_ouro > 0){
+        document.getElementById(lin +'|'+col).style.background = "url('ouro"+count_ouro+".jpg')";
+        document.getElementById(lin +'|'+col).style.backgroundSize="50px 44px";
+
+        obstaculos[lin +'|'+col] = "m";
+    }else{
+        document.getElementById(lin +'|'+col).style.background = "url('grama_verde.jpg')";
+        document.getElementById(lin +'|'+col).style.backgroundSize="50px 44px";
+        
+        obstaculos[lin +'|'+col] = "g";
+    }
+}
+
+function podeAndar(lin, col, nodes){
+        if(nodes)
+            return (obstaculos[nodes] == "g") ? true : false;
+        else
+
+            return (obstaculos[lin +'|'+col] == "g") ? true : false;
+}
+
+function temMina(lin, col){
+	return (obstaculos[lin +'|'+col] == "m") ? true : false;
+}
+
+function temObstaculo(lin, col){
+	return (obstaculos[lin +'|'+col] == "o") ? true : false;
+}
+
+function movimenta(lin, col){
+	var local_lin = passo_lin;
+	var local_col = passo_col;
+
+	passo_lin+=lin;
+	passo_col+=col;
+	document.getElementById(passo_lin +'|'+passo_col).style.background = "url('smile.jpg')";
+	document.getElementById(passo_lin +'|'+passo_col).style.backgroundSize="50px 44px";
+	
+	if(local_lin == base_lin && local_col == base_col){
+		document.getElementById(local_lin +'|'+local_col).style.background = "url('base.jpg')";
+		document.getElementById(local_lin +'|'+local_col).style.backgroundSize="50px 44px";
+	}else{
+		document.getElementById(local_lin +'|'+local_col).style.background = "url('grama_verde.jpg')";
+		document.getElementById(local_lin +'|'+local_col).style.backgroundSize="50px 44px";
+	}
+}
+
+function movimenta2(lin, col){
+
+	var local_lin = passo_lin;
+	var local_col = passo_col;
+	
+	passo_lin = lin;
+	passo_col = col;
+	document.getElementById(passo_lin +'|'+passo_col).style.background = "url('smile.jpg')";
+	document.getElementById(passo_lin +'|'+passo_col).style.backgroundSize="50px 44px";
+	
+
+	if(local_lin == base_lin && local_col == base_col){
+		document.getElementById(local_lin +'|'+local_col).style.background = "url('base.jpg')";
+		document.getElementById(local_lin +'|'+local_col).style.backgroundSize="50px 44px";
+	}else{
+		document.getElementById(local_lin +'|'+local_col).style.background = "url('grama_verde.jpg')";
+		document.getElementById(local_lin +'|'+local_col).style.backgroundSize="50px 44px";
+	}
+}
+
+function falsoAnda(dir){
+	control = (control == -1) ? espiral : control;
+	control--;
+	if(control == 0){
+		passada++;
+		if(passada == 2){
+			passada=0;
+			espiral++;
+		}
+		control =-1;
+		direcao = dir;
+	}
+}
+
+Array.prototype.remove = function(start, end) {
+  this.splice(start, end);
+  return this;
+}
+
+Array.prototype.insert = function(pos, item) {
+  this.splice(pos, 0, item);
+  return this;
+}
+
+function validalc(obj){
+    document.getElementById("colunas").value=obj.value;
+    document.getElementById("linhas").value=obj.value;
+}
+</script>
+
+</head>
+<body>
+
+<br>
+<label>Linhas</label>
+<input type="text" name="linhas" readonly="true" id="linhas" onKeyUp="validalc(this)" value="10" size="2">
+<label>Colunas</label>
+<input type="text" name="colunas" readonly="true" id="colunas" onKeyUp="validalc(this)" value="10" size="2">
+
+<input type="button" name="btn" id="btn" value="gerar" onClick="criarMapa(); document.getElementById('btnplay').disabled = false">&nbsp;
+<input type="button" disabled name="btnplay" id="btnplay" value="Play" onClick="this.disabled = true; play();">
+<div id="container"></div>
+</body>
+</html>
